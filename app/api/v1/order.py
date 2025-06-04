@@ -50,7 +50,7 @@ class OrderAPI:
 
         # Получить список цветов в заказе + количество
         result = await db.execute(
-            select(ordered_flowers.c.flower_id, ordered_flowers.c.quantity, Flower)
+            select(ordered_flowers.c.flower_id, ordered_flowers.c.quantity, ordered_flowers.c.is_close, Flower)
             .join(Flower, Flower.id == ordered_flowers.c.flower_id)
             .where(ordered_flowers.c.order_id == order_id)
         )
@@ -86,6 +86,7 @@ class OrderAPI:
             order_id=order.id,
             seller_id=seller_id,
             order_date=order.order_date,
+            is_closed=order.is_closed,
             items=items,
         )
 
