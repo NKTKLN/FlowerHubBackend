@@ -171,6 +171,7 @@ class OrderAPI:
                     order_id=order.id,
                     seller_id=seller_id,
                     order_date=order.order_date,
+                    is_closed=order.is_closed,
                     items=items,
                 )
             )
