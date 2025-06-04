@@ -17,6 +17,7 @@ class OrderResponse(BaseModel):
     buyer_id: int
     order_id: int
     order_date: date
+    is_closed: bool
     items: List[FlowerOrderItem]
 
 
