@@ -90,7 +90,7 @@ async def get_orders_by_seller(db: AsyncSession, seller_id: int):
 
         order_schemas.append(
             OrderSchema(
-                order_date=order.order_date, buyer_id=order.buyer_id, order_id=order.id, items=items
+                order_date=order.order_date, buyer_id=order.buyer_id, order_id=order.id, items=items, is_closed=order.is_closed
             )
         )
     return order_schemas
@@ -124,7 +124,7 @@ async def get_orders(db: AsyncSession):
 
         order_schemas.append(
             OrderSchema(
-                order_date=order.order_date, buyer_id=order.buyer_id, order_id=order.id, items=items
+                order_date=order.order_date, buyer_id=order.buyer_id, order_id=order.id, items=items, is_closed=order.is_closed
             )
         )
     return order_schemas

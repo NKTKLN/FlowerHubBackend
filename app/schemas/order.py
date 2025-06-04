@@ -33,6 +33,7 @@ class OrderSchema(BaseModel):
     order_id: int
     order_date: date
     buyer_id: int
+    is_closed: bool
     items: List[OrderedFlowerSchema]
 
     class Config:
