@@ -18,10 +18,9 @@ COPY pyproject.toml poetry.lock ./
 COPY . .
 
 # Устанавливаем зависимости через Poetry
-RUN poetry config virtualenvs.create false && poetry install --no-root --no-dev
-
+RUN poetry config virtualenvs.create false && poetry install --no-root
 # Указываем порт для API
 EXPOSE 8000
 
 # Команда для запуска приложения
-CMD ["uvicorn", "app.main:app", "--reload", "--host 0.0.0.0", "--port 8000"]
+CMD ["uvicorn", "app.main:app", "--reload", "--port=8000", "--host=0.0.0.0"]
