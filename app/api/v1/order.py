@@ -21,39 +21,6 @@ class OrderAPI:
         self.router.post("/")(self.make_order)
         self.router.get("/orders", response_model=list[OrderResponse])(self.get_my_orders)
         self.router.get("/orders/{order_id}", response_model=OrderResponse)(self.get_order_details)
-        self.router.put("/change_status", response_model=list[OrderResponse])(self.change_order_status)
-
-    async def change_order_status(
-        self,
-        order_id: int,
-        user_id: int = Depends(verify_token),
-        db: AsyncSession = Depends(get_session),
-    ):
-        logger.info(f"Пользователь {user_id} пытается изменить статус заказа {order_id}")
-        user = await get_user_by_id(db, user_id)
-        if not user or not (user.is_user_seller or user.is_user_admin):
-            logger.warning(
-                f"Доступ запрещён пользователю {user_id} для изменения статуса заказа — не продавец или админ"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Доступ разрешён только продавцам и администраторам",
-            )
-
-        order = await get_order_by_id(db, order_id)
-        if not order:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Заказ не найден",
-            )
-
-        order.is_closed = not order.is_closed
-        db.add(order)
-        await db.commit()
-        await db.refresh(order)
-
-        logger.info(f"Статус заказа {order_id} изменён на {'закрыт' if order.is_closed else 'открыт'}")
-        return {"detail": "Данные заказа успешно обновлены"}
 
     async def get_order_details(
         self,

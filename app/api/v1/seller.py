@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import verify_token
@@ -25,6 +25,7 @@ from app.crud import (
     get_user_by_id,
     update_flower,
 )
+from app.crud.order import get_order_by_id
 from app.db import get_session
 from app.schemas import (
     FlowerCountryCreate,
@@ -53,6 +54,39 @@ class SellerAPI:
         self.router.put("/flowers/{flower_id}", response_model=FlowerData)(self.edit_flower)
         self.router.delete("/flowers/{flower_id}")(self.remove_flower)
         self.router.get("/orders", response_model=List[OrderSchema])(self.get_orders)
+        self.router.put("/change_order_status", response_model=list[OrderResponse])(self.change_order_status)
+
+    async def change_order_status(
+        self,
+        order_id: int,
+        user_id: int = Depends(verify_token),
+        db: AsyncSession = Depends(get_session),
+    ):
+        logger.info(f"Пользователь {user_id} пытается изменить статус заказа {order_id}")
+        user = await get_user_by_id(db, user_id)
+        if not user or not (user.is_user_seller or user.is_user_admin):
+            logger.warning(
+                f"Доступ запрещён пользователю {user_id} для изменения статуса заказа — не продавец или админ"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Доступ разрешён только продавцам и администраторам",
+            )
+
+        order = await get_order_by_id(db, order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Заказ не найден",
+            )
+
+        order.is_closed = not order.is_closed
+        db.add(order)
+        await db.commit()
+        await db.refresh(order)
+
+        logger.info(f"Статус заказа {order_id} изменён на {'закрыт' if order.is_closed else 'открыт'}")
+        return {"detail": "Данные заказа успешно обновлены"}
 
     async def add_flower(
         self,
