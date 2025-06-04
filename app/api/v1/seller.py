@@ -54,7 +54,7 @@ class SellerAPI:
         self.router.put("/flowers/{flower_id}", response_model=FlowerData)(self.edit_flower)
         self.router.delete("/flowers/{flower_id}")(self.remove_flower)
         self.router.get("/orders", response_model=List[OrderSchema])(self.get_orders)
-        self.router.put("/change_order_status")(self.change_order_status)
+        self.router.put("/change_order_status/{order_id}")(self.change_order_status)
 
     async def change_order_status(
         self,
