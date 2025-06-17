@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 class CartUpdateRequest(BaseModel):
     cart: Dict[str, int]
 
+user_carts = {}
+
 class OrderAPI:
     def __init__(self):
         self.router = APIRouter()
-        self.user_carts = {}
 
         self.router.post("/")(self.make_order)
         self.router.post("/cart")(self.update_cart)
@@ -39,7 +40,7 @@ class OrderAPI:
             if qty < 0:
                 raise HTTPException(status_code=400, detail="Количество не может быть отрицательным")
             
-        self.user_carts[user_id] = cart_update.cart
+        user_carts[user_id] = cart_update.cart
         return
 
     async def get_cart(
@@ -47,7 +48,7 @@ class OrderAPI:
         user_id: int = Depends(verify_token),
     ):
         logger.info(f"Пользователь {user_id} запросил корзину")
-        cart = self.user_carts.get(user_id, {})
+        cart = user_carts.get(user_id, {})
         return cart
 
     async def get_order_details(
