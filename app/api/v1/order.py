@@ -24,7 +24,7 @@ class OrderAPI:
         self.user_carts = {}
 
         self.router.post("/")(self.make_order)
-        self.router.post("/cart")
+        self.router.post("/cart")(self.update_cart)
         self.router.get("/cart", response_model=Dict[str, int])(self.get_cart)
         self.router.get("/orders", response_model=list[OrderResponse])(self.get_my_orders)
         self.router.get("/orders/{order_id}", response_model=OrderResponse)(self.get_order_details)
