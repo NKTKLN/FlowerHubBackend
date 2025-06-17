@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -8,19 +9,46 @@ from app.core import verify_token
 from app.crud import get_user_by_id
 from app.crud.order import create_order_by_buyer, get_order_by_id, get_orders_by_buyer
 from app.db import get_session
+from pydantic import BaseModel
 from app.db.models import Flower, Order, ordered_flowers, saleable_flowers
 from app.schemas import CreateOrder, OrderResponse
 
 logger = logging.getLogger(__name__)
 
+class CartUpdateRequest(BaseModel):
+    cart: Dict[str, int]
 
 class OrderAPI:
     def __init__(self):
         self.router = APIRouter()
+        self.user_carts = {}
 
         self.router.post("/")(self.make_order)
+        self.router.post("/cart")
+        self.router.get("/cart", response_model=Dict[str, int])(self.get_cart)
         self.router.get("/orders", response_model=list[OrderResponse])(self.get_my_orders)
         self.router.get("/orders/{order_id}", response_model=OrderResponse)(self.get_order_details)
+
+    async def update_cart(
+        self,
+        cart_update: CartUpdateRequest, 
+        user_id: int = Depends(verify_token),
+    ):
+        logger.info(f"Пользователь {user_id} обновил корзину: {cart_update.cart}")
+        for qty in cart_update.cart.values():
+            if qty < 0:
+                raise HTTPException(status_code=400, detail="Количество не может быть отрицательным")
+            
+        self.user_carts[user_id] = cart_update.cart
+        return
+
+    async def get_cart(
+        self,
+        user_id: int = Depends(verify_token),
+    ):
+        logger.info(f"Пользователь {user_id} запросил корзину")
+        cart = self.user_carts.get(user_id, {})
+        return cart
 
     async def get_order_details(
         self,
